@@ -1,6 +1,6 @@
 @ Program 4
 @ JumpDecode.s
-@ Howard Miller, Jiyoung Yun
+@ Jiyoung Yun
 @ 9-2019 3-2022 3-2026
 @ CIST 039
 .PSIZE 50, 100
@@ -10,7 +10,7 @@
 
 .DATA
 
-courseSTR:		.ASCIZ	"Jiyoung Yun\t\t\tCIST 039\n"
+courseSTR:		.ASCIZ	"Jiyoung Yun (c) 2026\t\t\tCIST 039\n"
 pgmSTR:			.ASCIZ	"This program will Decode a subset of ARM instructions\n"
 titleSTR:		.ASCIZ	"Address\t\tM Language\tInstruction"
 
@@ -43,7 +43,7 @@ branchMnemonics:
 			.STRING	"LT "	// 1011
 			.STRING	"GT "	// 1100
 			.STRING	"LE "	// 1101
-			.STRING	"AL"	// 1110		// Just a Branch B / BL
+			.STRING	"   "	// 1110		// Just a Branch B / BL
 			.STRING	"xx "	// 1111		// Reserved, never use
 
 /*
@@ -110,10 +110,8 @@ Code Start
     BL      putchar                 // if Link, print 'L'
 
 BranchInstruction: 
-    LSR     R12, R9, #28            // R12 = CC
-    CMP     R12, #0b1110
-    BEQ     Offset
     LDR     R3, =branchMnemonics
+    LSR     R12, R9, #28            // R12 = CC
     ADD     R1, R3, R12, LSL #2     // R1 = &R3[R12]
     LDR     R0, =printSTRing
     BL      printf    
