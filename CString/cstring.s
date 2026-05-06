@@ -208,20 +208,12 @@ upperFirstChar:
     //
     // Input:
     //  R0  Is the Address of the start of the string
-    // Output:
-    //  R0  Is the updated string
-    STMDB   SP!, {R5, FP, LR}
+    STMDB   SP!, {R4, R5, FP, LR}
     MOV     FP, SP
     STMDB   SP!, {R0}       @ [FP-4] = R0
 
-    MOV     R5, #0
-
-    LDR     R1, [FP, #-4]
-    LDRB    R0, [R1, R5]
-    BL      toupper
-    LDR     R1, [FP, #-4]
-    STRB    R0, [R1, R5]
-    ADD     R5, R5, #1
+    MOV     R4, #1          @ first char should be capitalized
+    MOV     R5, #0          @ index
 
 upperFirstCharLoop:
     LDR     R1, [FP, #-4]
@@ -229,21 +221,25 @@ upperFirstCharLoop:
     CMP     R0, #00
     BEQ     upperFirstCharDone
 
-    SUB     R3, R5, #1
-    LDRB    R2, [R1, R3]
-    CMP     R2, #' '
-    BNE     upperFirstCharNext
+    CMP     R0, #' '
+    MOVEQ   R4, #1
+    ADDEQ   R5, R5, #1
+    BEQ     upperFirstCharLoop
+
+    CMP     R4, #0
+    BEQ     upperFirstCharNext
 
     BL      toupper
     LDR     R1, [FP, #-4]
     STRB    R0, [R1, R5]
 
 upperFirstCharNext:
+    MOV     R4, #0
     ADD     R5, R5, #1
     B       upperFirstCharLoop
 
 upperFirstCharDone:
     LDMIA   SP!, {R0}
-    LDMIA   SP!, {R5, FP, LR}
+    LDMIA   SP!, {R4, R5, FP, LR}
     BX      LR
 
