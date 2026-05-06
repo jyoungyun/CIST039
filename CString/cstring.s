@@ -66,6 +66,12 @@ main:
     LDR         R1, =inputBuffer
     BL          printf
 
+    LDR         R0, =inputBuffer
+    BL          shouting
+    LDR         R0, =shoutFMT
+    LDR         R1, =inputBuffer
+    BL          printf
+
 Done:
     LDMIA   SP!, {FP, LR}
 	MOV		R0, #0			// Return Code of 0	
@@ -241,5 +247,34 @@ upperFirstCharNext:
 upperFirstCharDone:
     LDMIA   SP!, {R0}
     LDMIA   SP!, {R4, R5, FP, LR}
+    BX      LR
+
+shouting:
+    // Uppercase Every laatter in the string
+    //
+    // Input:
+    //  R0  Is the Address of the start of the string
+    STMDB   SP!, {R5, FP, LR}
+    MOV     FP, SP
+    STMDB   SP!, {R0}       @ [FP-4] = R0
+
+    MOV     R5, #0          @ index
+
+shoutingLoop:
+    LDR     R1, [FP, #-4]
+    LDRB    R0, [R1, R5]
+    CMP     R0, #00
+    BEQ     shoutingLoopDone
+
+    BL      toupper
+    LDR     R1, [FP, #-4]
+    STRB    R0, [R1, R5]
+
+    ADD     R5, R5, #1
+    B       shoutingLoop
+
+shoutingLoopDone:
+    LDMIA   SP!, {R0}
+    LDMIA   SP!, {R5, FP, LR}
     BX      LR
 
