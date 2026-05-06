@@ -1,7 +1,9 @@
 @ Program 4
 @ JumpDecode.s
+@ Howard Miller
+@ 9-2019 3-2022
 @ Jiyoung Yun
-@ 9-2019 3-2022 3-2026
+@ 3-2026
 @ CIST 039
 .PSIZE 50, 100
 .TITLE		"ARM Jump Decoding"
