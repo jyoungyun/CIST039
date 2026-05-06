@@ -1,3 +1,0 @@
-Jiyoung Yun - CIST039
-Hello World!
-(program exited with code: 10)
