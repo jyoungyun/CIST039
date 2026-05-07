@@ -315,12 +315,11 @@ removeSpaceLoop:
     MOVNE   R1, #0
     BNE     removeSpaceNext
 
-    CMP     R1, #0
-    MOVEQ   R1, #1
-    BEQ     removeSpaceNext
+    CMP     R1, #1
+    ADDEQ   R2, R2, #1
+    BEQ     removeSpaceLoop
 
-    ADD     R2, R2, #1
-    B       removeSpaceLoop
+    MOV     R1, #1
 
 removeSpaceNext:
     STRB    R12, [R0, R3]
