@@ -28,11 +28,11 @@ main:
     STMDB       SP!, {FP, LR}
     MOV         FP, SP
 
-	LDR		    R0, =courseSTR		/*Course Title*/ 
-	BL		    puts
+    LDR         R0, =courseSTR		/*Course Title*/ 
+    BL          puts
 
-	LDR		    R0, =inputSTR
-	BL		    printf
+    LDR         R0, =inputSTR
+    BL          printf
 
     LDR         R0, =inputBuffer
     LDR         R1, =BUFFER_SIZE
