@@ -17,7 +17,7 @@ countFMT:       .ASCIZ  "There are %d characters in \"%s\".\n"
 vowelFMT:       .ASCIZ  "There are %d vowels in: \"%s\".\n"
 upperFMT:       .ASCIZ  "Upper case first characters: \"%s\".\n"
 shoutFMT:       .ASCIZ  "Shouting: \"%s\".\n"
-exspaceFMT:     .ASCIZ  "Extra spaces removed: \"%s\".\n"
+removeFMT:      .ASCIZ  "Extra spaces removed: \"%s\".\n"
 
 .EJECT			// Form feed / New Page
 .SBTTL		"The Code for the Program"
@@ -69,6 +69,12 @@ main:
     LDR         R0, =inputBuffer
     BL          shouting
     LDR         R0, =shoutFMT
+    LDR         R1, =inputBuffer
+    BL          printf
+
+    LDR         R0, =inputBuffer
+    BL          removeSpace
+    LDR         R0, = removeFMT
     LDR         R1, =inputBuffer
     BL          printf
 
@@ -276,5 +282,56 @@ shoutingLoop:
 shoutingLoopDone:
     LDMIA   SP!, {R0}
     LDMIA   SP!, {R5, FP, LR}
+    BX      LR
+
+removeSpace:
+    // Remove the excesses spaces in the string
+    //
+    // Input:
+    //  R0  Is the Address of the start of the string
+    STMDB   SP!, {FP, LR}
+    MOV     FP, SP
+
+//int j = 0;
+//for (int i = 0; i < length) {
+//    if (str[i] != ' ')
+//        flag = 0, str[j++] = str[i++];
+//    if (str[i] == ' ' && flag == 0)
+//        flag = 1; str[j++] = str[i++];
+//    if (str[i] == ' ' && flag == 1)
+//        i++;
+//        continue;
+
+    MOV     R1, #0          @ flag
+    MOV     R2, #0          @ read index
+    MOV     R3, #0          @ write index
+
+removeSpaceLoop:
+    LDRB    R12, [R0, R2]
+    CMP     R12, #00
+    BEQ     removeSpaceDone
+
+    CMP     R12, #' '
+    MOVNE   R1, #0
+    BNE     removeSpaceNext
+
+    CMP     R1, #0
+    MOVEQ   R1, #1
+    BEQ     removeSpaceNext
+
+    ADD     R2, R2, #1
+    B       removeSpaceLoop
+
+removeSpaceNext:
+    STRB    R12, [R0, R3]
+    ADD     R2, R2, #1
+    ADD     R3, R3, #1
+    B       removeSpaceLoop
+
+removeSpaceDone:
+    MOV     R12, #00
+    STRB    R12, [R0, R3]
+
+    LDMIA   SP!, {FP, LR}
     BX      LR
 
