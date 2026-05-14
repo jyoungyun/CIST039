@@ -11,8 +11,8 @@
 courseSTR:		.ASCIZ	"Jiyoung Yun (c) 2026\t\t\tCIST 039\n"
 inputSTR:		.ASCIZ	"\nEnter a string: "
 .balign 4
-                .SET    BUFFER_SIZE, 100
-inputBuffer:    .SKIP   BUFFER_SIZE+1
+.set BUFFER_SIZE, 100
+
 countFMT:       .ASCIZ  "There are %d characters in \"%s\".\n"
 vowelFMT:       .ASCIZ  "There are %d vowels in: \"%s\".\n"
 upperFMT:       .ASCIZ  "Upper case first characters: \"%s\".\n"
@@ -27,6 +27,7 @@ removeFMT:      .ASCIZ  "Extra spaces removed: \"%s\".\n"
 main:
     STMDB       SP!, {FP, LR}
     MOV         FP, SP
+    SUB         SP, SP, #BUFFER_SIZE
 
     LDR         R0, =courseSTR		/*Course Title*/ 
     BL          puts
@@ -34,51 +35,49 @@ main:
     LDR         R0, =inputSTR
     BL          printf
 
-    LDR         R0, =inputBuffer
+    SUB         R0, FP, #BUFFER_SIZE
     LDR         R1, =BUFFER_SIZE
     BL          getline
 
-    LDR         R0, =inputBuffer
+    SUB         R0, FP, #BUFFER_SIZE
     LDRB        R0, [R0]
     CMP         R0, #00
     BEQ         Done
 
-    LDR         R0, =inputBuffer
-    BL          puts
-
-    LDR         R0, =inputBuffer
+    SUB         R0, FP, #BUFFER_SIZE
     BL          countCharacters
     MOV         R1, R0
     LDR         R0, =countFMT
-    LDR         R2, =inputBuffer
+    SUB         R2, FP, #BUFFER_SIZE
     BL          printf
 
-    LDR         R0, =inputBuffer
+    SUB         R0, FP, #BUFFER_SIZE
     BL          countVowels
     MOV         R1, R0
     LDR         R0, =vowelFMT
-    LDR         R2, =inputBuffer
+    SUB         R2, FP, #BUFFER_SIZE
     BL          printf
 
-    LDR         R0, =inputBuffer
+    SUB         R0, FP, #BUFFER_SIZE
     BL          upperFirstChar
     LDR         R0, =upperFMT
-    LDR         R1, =inputBuffer
+    SUB         R1, FP, #BUFFER_SIZE
     BL          printf
 
-    LDR         R0, =inputBuffer
+    SUB         R0, FP, #BUFFER_SIZE
     BL          shouting
     LDR         R0, =shoutFMT
-    LDR         R1, =inputBuffer
+    SUB         R1, FP, #BUFFER_SIZE
     BL          printf
 
-    LDR         R0, =inputBuffer
+    SUB         R0, FP, #BUFFER_SIZE
     BL          removeSpace
-    LDR         R0, = removeFMT
-    LDR         R1, =inputBuffer
+    LDR         R0, =removeFMT
+    SUB         R1, FP, #BUFFER_SIZE
     BL          printf
 
 Done:
+    MOV     SP, FP
     LDMIA   SP!, {FP, LR}
 	MOV		R0, #0			// Return Code of 0	
 	BX		LR
@@ -91,34 +90,29 @@ getline:
     //  R1  Is the maximum length of the string
     // Output:
     //  none
-    STMDB   SP!, {R5, FP, LR}
+    STMDB   SP!, {R4, R5, FP, LR}
     MOV     FP, SP
-    STMDB   SP!, {R0, R1}   @ [FP-8] = R0
-                            @ [FP-4] = R1
 
-    MOV     R5, #0     @ index = 0
+    MOV     R4, R0      @ buffer
+    MOV     R5, R1      @ index
 
 readLoop:
     BL      getchar
     CMP     R0, #'\n'
     BEQ     readDone
 
-    LDR     R1, [FP, #-4]
-    CMP     R5, R1
-    BGE     readDone
+    SUBS    R5, R5, #1
+    BEQ     readDone
 
-    LDR     R1, [FP, #-8]
-    STRB    R0, [R1, R5]
-    ADD     R5, R5, #1
+    STRB    R0, [R4]
+    ADD     R4, R4, #1
     B       readLoop
 
 readDone:
     MOV     R0, #0
-    LDR     R1, [FP, #-8]
-    STRB    R0, [R1, R5]
+    STRB    R0, [R4]
 
-    LDMIA   SP!, {R0, R1}
-    LDMIA   SP!, {R5, FP, LR}
+    LDMIA   SP!, {R4, R5, FP, LR}
     BX      LR
 
 countCharacters:
@@ -154,19 +148,13 @@ toupper:
     //  R0  Is the character
     // Output:
     //  R0  Is the upper character
-    STMDB   SP!, {FP, LR}
-    MOV     FP, SP
-
     CMP     R0, #'a'
-    BLT     toupperDone
+    BXLO    LR
 
     CMP     R0, #'z'
-    BGT     toupperDone
+    BXHI    LR
 
-    SUB     R0, R0, #32    
-
-toupperDone:
-    LDMIA   SP!, {FP, LR}
+    AND     R0, R0, #0B11011111
     BX      LR
 
 countVowels:
@@ -194,18 +182,12 @@ countVowelsLoop:
     LDMIA   SP!, {R0, R1}
 
     CMP     R2, #'A'
-    BEQ     isVowel
-    CMP     R2, #'E'
-    BEQ     isVowel   
-    CMP     R2, #'I'
-    BEQ     isVowel
-    CMP     R2, #'O'
-    BEQ     isVowel
-    CMP     R2, #'U'
-    BEQ     isVowel
-    B       next
+    CMPNE   R2, #'E'
+    CMPNE   R2, #'I'
+    CMPNE   R2, #'O'
+    CMPNE   R2, #'U'
+    BNE     next
 
-isVowel:
     ADD     R0, R0, #1
 next:
     ADD     R1, R1, #1
@@ -222,36 +204,35 @@ upperFirstChar:
     //  R0  Is the Address of the start of the string
     STMDB   SP!, {R4, R5, FP, LR}
     MOV     FP, SP
-    STMDB   SP!, {R0}       @ [FP-4] = R0
 
-    MOV     R4, #1          @ first char should be capitalized
-    MOV     R5, #0          @ index
+    MOV     R4, R0          @ buffer
+    MOV     R5, #1          @ flag
 
 upperFirstCharLoop:
-    LDR     R1, [FP, #-4]
-    LDRB    R0, [R1, R5]
+    LDRB    R0, [R4]
     CMP     R0, #00
     BEQ     upperFirstCharDone
 
     CMP     R0, #' '
-    MOVEQ   R4, #1
-    ADDEQ   R5, R5, #1
-    BEQ     upperFirstCharLoop
+    BNE     upperFirstCharNotSpace
 
-    CMP     R4, #0
-    BEQ     upperFirstCharNext
+    MOV     R5, #1
+    ADD     R4, R4, #1
+    B       upperFirstCharLoop
+
+upperFirstCharNotSpace:
+    CMP     R5, #1
+    BNE     upperFirstCharNext
 
     BL      toupper
-    LDR     R1, [FP, #-4]
-    STRB    R0, [R1, R5]
+    STRB    R0, [R4]
+    MOV     R5, #0
 
 upperFirstCharNext:
-    MOV     R4, #0
-    ADD     R5, R5, #1
+    ADD     R4, R4, #1
     B       upperFirstCharLoop
 
 upperFirstCharDone:
-    LDMIA   SP!, {R0}
     LDMIA   SP!, {R4, R5, FP, LR}
     BX      LR
 
@@ -260,28 +241,24 @@ shouting:
     //
     // Input:
     //  R0  Is the Address of the start of the string
-    STMDB   SP!, {R5, FP, LR}
+    STMDB   SP!, {R4, FP, LR}
     MOV     FP, SP
-    STMDB   SP!, {R0}       @ [FP-4] = R0
 
-    MOV     R5, #0          @ index
+    MOV     R4, R0          @ buffer
 
 shoutingLoop:
-    LDR     R1, [FP, #-4]
-    LDRB    R0, [R1, R5]
+    LDRB    R0, [R4]
     CMP     R0, #00
     BEQ     shoutingLoopDone
 
     BL      toupper
-    LDR     R1, [FP, #-4]
-    STRB    R0, [R1, R5]
+    STRB    R0, [R4]
 
-    ADD     R5, R5, #1
+    ADD     R4, R4, #1
     B       shoutingLoop
 
 shoutingLoopDone:
-    LDMIA   SP!, {R0}
-    LDMIA   SP!, {R5, FP, LR}
+    LDMIA   SP!, {R4, FP, LR}
     BX      LR
 
 removeSpace:
